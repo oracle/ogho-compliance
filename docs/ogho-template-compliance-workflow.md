@@ -146,7 +146,7 @@ with:
   contributing-policy: disabled
 ```
 
-The default and disabled workflows should target mutually exclusive repository sets. If both rulesets target the same repository, both workflows run and both results are required.
+The default and disabled workflows should target mutually exclusive repository sets. If both rulesets target the same repository, both workflows run and both results are required. Both source workflows skip their validation job when `github.repository` is `oracle-samples/ogho-compliance`; ruleset-injected runs use the target repository context and run normally.
 
 ### Organization ruleset configuration
 

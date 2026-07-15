@@ -43,6 +43,8 @@ An organization ruleset can run one of these workflows against target repositori
 
 Target each repository with only one of these required workflows. If both apply, both checks run and the default workflow still validates a local `CONTRIBUTING.md` when present.
 
+Both workflows skip their validation job when triggered in this source repository. Organization-ruleset runs use the target repository context and run normally.
+
 ## Action inputs
 
 Most workflows do not need to set inputs.

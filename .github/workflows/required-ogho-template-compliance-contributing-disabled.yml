@@ -10,7 +10,7 @@ permissions:
 jobs:
   validate:
     name: Validate repository template (CONTRIBUTING disabled)
-    if: true
+    if: github.repository != 'oracle-samples/ogho-compliance'
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repository
