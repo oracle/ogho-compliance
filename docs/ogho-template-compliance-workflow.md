@@ -37,10 +37,11 @@ The implementation is maintained in `oracle-samples/ogho-compliance`:
 
 - Composite action: `.github/actions/ogho-template-check/action.yml`
 - Validator: `.github/actions/ogho-template-check/check.py`
-- Action test workflow: `.github/workflows/test-ogho-template-compliance.yml`
+- Default required workflow: `.github/workflows/required-ogho-template-compliance.yml`
+- Required workflow without contributing-guide checks: `.github/workflows/required-ogho-template-compliance-contributing-disabled.yml`
 - Canonical security policy: root `SECURITY.md` on the `main` branch of `oracle/template-repo`
 
-The action uses Bash, `curl`, and Python's standard library. It downloads the canonical `SECURITY.md` from `https://raw.githubusercontent.com/oracle/template-repo/main/SECURITY.md`; it does not install dependencies or execute application code from the repository being inspected. This repository does not copy the template files: its test workflow checks the action against a fresh checkout of `oracle/template-repo`.
+The action uses Bash, `curl`, and Python's standard library. It downloads the canonical `SECURITY.md` from `https://raw.githubusercontent.com/oracle/template-repo/main/SECURITY.md`; it does not install dependencies or execute application code from the repository being inspected. This repository does not copy the template files.
 
 ## Using the workflow in another repository
 
@@ -109,7 +110,7 @@ Adding a workflow to individual repositories provides visibility, but it does no
 
 ### Central ruleset workflow
 
-Store the following workflow as `.github/workflows/required-ogho-template-compliance.yml` in an Oracle-owned source repository that can be selected by the Oracle organization ruleset. The workflow can call the public action hosted in `oracle-samples/ogho-compliance`.
+This repository provides `.github/workflows/required-ogho-template-compliance.yml` as an organization-ruleset workflow. It checks out the target repository and calls the public action hosted in `oracle-samples/ogho-compliance`.
 
 ```yaml
 name: Required OGHO template compliance
@@ -136,6 +137,17 @@ jobs:
 
 The `merge_group` trigger is required for repositories using a merge queue. A ruleset workflow supports `pull_request`, `pull_request_target`, and `merge_group`; `push` and `workflow_dispatch` are not enforcement triggers. Do not use `pull_request_target`: the validator needs only the pull request contents and a read-only token.
 
+### Repositories without contributing-guide checks
+
+For repositories where contributing-guide validation is explicitly disabled, select `.github/workflows/required-ogho-template-compliance-contributing-disabled.yml` instead. It runs the same required check with:
+
+```yaml
+with:
+  contributing-policy: disabled
+```
+
+The default and disabled workflows should target mutually exclusive repository sets. If both rulesets target the same repository, both workflows run and both results are required.
+
 ### Organization ruleset configuration
 
 An Oracle organization owner, or a user with the organization ruleset-management permission, should:
@@ -148,7 +160,7 @@ An Oracle organization owner, or a user with the organization ruleset-management
 4. Target the **default branch**, not every branch.
 5. Enable **Require a pull request before merging**.
 6. Enable **Require workflows to pass before merging**.
-7. Select the source repository and `required-ogho-template-compliance.yml` workflow.
+7. Select this source repository and either `required-ogho-template-compliance.yml` or `required-ogho-template-compliance-contributing-disabled.yml`, according to the target repositories' contributing policy.
 8. Limit bypass access to a designated break-glass team or provisioning GitHub App. Repository administrators should not receive general bypass access.
 9. Start the ruleset in **Evaluate** mode and review the rule insights.
 10. Remediate or explicitly exempt noncompliant repositories, then move the ruleset to **Active**.
