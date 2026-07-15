@@ -33,14 +33,14 @@ This workflow covers **template checks only**. It does not generate an SBOM, sca
 
 ## Implementation
 
-The implementation is maintained in `oracle/ogho-compliance`:
+The implementation is maintained in `oracle-samples/ogho-compliance`:
 
 - Composite action: `.github/actions/ogho-template-check/action.yml`
 - Validator: `.github/actions/ogho-template-check/check.py`
-- Self-validation workflow: `.github/workflows/ogho-template-compliance.yml`
+- Action test workflow: `.github/workflows/test-ogho-template-compliance.yml`
 - Canonical security policy: root `SECURITY.md` on the `main` branch of `oracle/template-repo`
 
-The action uses Bash, `curl`, and Python's standard library. It downloads the canonical `SECURITY.md` from `https://raw.githubusercontent.com/oracle/template-repo/main/SECURITY.md`; it does not install dependencies or execute application code from the repository being inspected.
+The action uses Bash, `curl`, and Python's standard library. It downloads the canonical `SECURITY.md` from `https://raw.githubusercontent.com/oracle/template-repo/main/SECURITY.md`; it does not install dependencies or execute application code from the repository being inspected. This repository does not copy the template files: its test workflow checks the action against a fresh checkout of `oracle/template-repo`.
 
 ## Using the workflow in another repository
 
@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run OGHO template checks
-        uses: oracle/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
+        uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
 ```
 
 Replace `<FULL_COMMIT_SHA>` with an approved commit containing a released version of the action. Pinning the full commit SHA prevents an unreviewed change to the action code from changing the code executed by repository workflows. The canonical security policy is intentionally not pinned: each run compares against the root `SECURITY.md` from the latest `main` revision of `oracle/template-repo`.
@@ -88,7 +88,7 @@ Normal GitHub workflows do not need to set any inputs.
 Example for checking a repository staged in a subdirectory:
 
 ```yaml
-- uses: oracle/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
+- uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
   with:
     path: checked-out-repository
 ```
@@ -96,7 +96,7 @@ Example for checking a repository staged in a subdirectory:
 Repositories that must maintain their own contributing guide can require it explicitly:
 
 ```yaml
-- uses: oracle/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
+- uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
   with:
     contributing-policy: required
 ```
@@ -109,7 +109,7 @@ Adding a workflow to individual repositories provides visibility, but it does no
 
 ### Central ruleset workflow
 
-Store the following workflow as `.github/workflows/required-ogho-template-compliance.yml` in `oracle/ogho-compliance`.
+Store the following workflow as `.github/workflows/required-ogho-template-compliance.yml` in an Oracle-owned source repository that can be selected by the Oracle organization ruleset. The workflow can call the public action hosted in `oracle-samples/ogho-compliance`.
 
 ```yaml
 name: Required OGHO template compliance
@@ -131,7 +131,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run OGHO template checks
-        uses: oracle/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
+        uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
 ```
 
 The `merge_group` trigger is required for repositories using a merge queue. A ruleset workflow supports `pull_request`, `pull_request_target`, and `merge_group`; `push` and `workflow_dispatch` are not enforcement triggers. Do not use `pull_request_target`: the validator needs only the pull request contents and a read-only token.
@@ -160,7 +160,7 @@ Organization rulesets layer with existing repository rulesets and branch-protect
 Before activation, confirm that:
 
 - GitHub Actions is enabled for all targeted repositories.
-- Organization Actions policy permits `actions/checkout` and the action under `oracle/ogho-compliance`.
+- Organization Actions policy permits `actions/checkout` and the action under `oracle-samples/ogho-compliance`.
 - GitHub-hosted runners are available, or self-hosted runners provide Bash, `curl`, Python 3.10 or later, and a current Actions runner compatible with `actions/checkout@v7`.
 - Runners can make outbound HTTPS requests to `raw.githubusercontent.com` to retrieve the canonical security policy.
 - The source workflow repository has suitable visibility. A public workflow can target repositories of any visibility; an internal workflow can target internal and private repositories; a private workflow can target private repositories.
@@ -178,7 +178,7 @@ The new repository becomes subject to the ruleset after initialization.
 
 ## Recommended rollout
 
-1. **Validate the action:** Run the action in `oracle/ogho-compliance` and a representative set of public and private repositories.
+1. **Validate the action:** Run the action in `oracle-samples/ogho-compliance` and a representative set of public and private repositories.
 2. **Publish an approved version:** Merge the action and record its full commit SHA.
 3. **Pilot voluntary adoption:** Add the consumer workflow to several repositories and collect false-positive or usability feedback.
 4. **Evaluate centrally:** Create the organization ruleset in Evaluate mode using a limited target set or repository custom property.
@@ -206,7 +206,7 @@ The action reports all detected failures in one run so repository owners can rem
 Changes to the Oracle repository template require coordinated action maintenance:
 
 1. Update the root template files in `oracle/template-repo`.
-2. Update the validator in `oracle/ogho-compliance` with the required sections or accepted aliases as needed.
+2. Update the validator in `oracle-samples/ogho-compliance` with the required sections or accepted aliases as needed.
 3. Run the validator against the template repository and intentional negative fixtures.
 4. Merge the reviewed change and record the new full commit SHA.
 5. Update the central ruleset workflow to the new SHA when action code changes. A root `SECURITY.md` change becomes canonical as soon as it reaches `main` and does not require an action-reference update.
@@ -217,7 +217,7 @@ The source repository and central workflow should themselves be protected with r
 ## References
 
 - GitHub Compliance Audit Service documentation (Oracle internal; available in the OGHO Confluence space)
-- [Oracle OGHO compliance repository](https://github.com/oracle/ogho-compliance)
+- [Oracle OGHO compliance repository](https://github.com/oracle-samples/ogho-compliance)
 - [Oracle template repository](https://github.com/oracle/template-repo)
 - [GitHub: Create a default community health file](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file)
 - [GitHub: Require workflows to pass before merging](https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging)

@@ -1,0 +1,30 @@
+name: Test OGHO template compliance action
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate canonical repository template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out compliance action
+        uses: actions/checkout@v7
+
+      - name: Check out canonical repository template
+        uses: actions/checkout@v7
+        with:
+          repository: oracle/template-repo
+          ref: main
+          path: .test/template-repo
+
+      - name: Run OGHO template checks
+        uses: ./.github/actions/ogho-template-check
+        with:
+          path: .test/template-repo
+          repository-name: template-repo
+          default-branch: main
