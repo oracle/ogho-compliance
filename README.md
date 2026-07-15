@@ -1,44 +1,54 @@
-*This repository acts as a template for all of Oracle’s GitHub repositories. It contains information about the guidelines for those repositories. All files and sections contained in this template are mandatory, and a GitHub app ensures alignment with these guidelines. To get started with a new repository, replace the italic paragraphs with the respective text for your project.*
+# OGHO template compliance workflow
 
-# Project name
+This repository hosts the reusable GitHub Action that checks Oracle repositories for compliance with the repository requirements defined by [`oracle/template-repo`](https://github.com/oracle/template-repo).
 
-*Describe your project's features, functionality and target audience*
+It does not maintain copies of the repository templates. The action reads the canonical `SECURITY.md` from `oracle/template-repo` at runtime, and this repository's test workflow checks the validator against a fresh checkout of that repository.
 
-## Installation
+## Add the workflow to a repository
 
-*Provide detailed step-by-step installation instructions. You can name this section **How to Run** or **Getting Started** instead of **Installation** if that's more acceptable for your project*
+Create `.github/workflows/ogho-template-compliance.yml` in the repository to validate:
 
-## Documentation
+```yaml
+name: OGHO template compliance
 
-*Developer-oriented documentation can be published on GitHub, but all product documentation must be published on <https://docs.oracle.com>*
+on:
+  pull_request:
+  merge_group:
 
-## Examples
+permissions:
+  contents: read
 
-*Describe any included examples or provide a link to a demo/tutorial*
+jobs:
+  validate:
+    name: Validate repository template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-## Help
+      - name: Run OGHO template checks
+        uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@<FULL_COMMIT_SHA>
+```
 
-*Inform users on where to get help or how to receive official support from Oracle (if applicable)*
+Replace `<FULL_COMMIT_SHA>` with the full SHA of an approved commit from this repository. Pinning the action prevents unreviewed changes from altering the code executed by the workflow.
 
-## Contributing
+The action checks the repository name and default branch, required root files, license format, required README and contributing-guide sections, and the canonical security policy. It reports failures as GitHub annotations and in the job summary.
 
-*If your project has specific contribution requirements, update the CONTRIBUTING.md file to ensure those requirements are clearly explained*
+## Action inputs
 
-This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)
+Most workflows do not need to set inputs.
 
-## Security
+| Input | Default | Purpose |
+| --- | --- | --- |
+| `path` | `.` | Repository path to inspect, relative to `GITHUB_WORKSPACE`. |
+| `repository-name` | GitHub event metadata | Override used for local tests or nonstandard events. |
+| `default-branch` | GitHub event metadata | Override used for local tests or nonstandard events. |
+| `contributing-policy` | `optional` | Use `required` to require a local guide or `disabled` to skip the check. |
 
-Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
+For organization-wide ruleset configuration, rollout guidance, and troubleshooting, see the [OGHO template compliance workflow guide](docs/ogho-template-compliance-workflow.md).
 
 ## License
 
-*The correct copyright notice format for both documentation and software is*
-    "Copyright (c) [year,] year Oracle and/or its affiliates."
-*You must include the year the content was first released (on any platform) and the most recent year in which it was revised*
-
 Copyright (c) 2026 Oracle and/or its affiliates.
 
-*Replace this statement if your project is not licensed under the UPL*
-
-Released under the Universal Permissive License v1.0 as shown at
-<https://oss.oracle.com/licenses/upl/>.
+Released under the Universal Permissive License v1.0 as shown in [LICENSE.txt](LICENSE.txt).
