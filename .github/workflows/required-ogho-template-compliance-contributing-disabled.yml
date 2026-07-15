@@ -1,0 +1,22 @@
+name: Required OGHO template compliance (CONTRIBUTING disabled)
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate repository template (CONTRIBUTING disabled)
+    if: github.repository != 'oracle-samples/ogho-compliance'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out target repository
+        uses: actions/checkout@v7
+
+      - name: Run OGHO template checks
+        uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@bb0d80806f204615b445e7ce2d3ee3019779eb2b
+        with:
+          contributing-policy: disabled

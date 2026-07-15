@@ -2,7 +2,7 @@
 
 This repository hosts the reusable GitHub Action that checks Oracle repositories for compliance with the repository requirements defined by [`oracle/template-repo`](https://github.com/oracle/template-repo).
 
-It does not maintain copies of the repository templates. The action reads the canonical `SECURITY.md` from `oracle/template-repo` at runtime, and this repository's test workflow checks the validator against a fresh checkout of that repository.
+It does not maintain copies of the repository templates. The action reads the canonical `SECURITY.md` from `oracle/template-repo` at runtime. This repository also provides centrally managed workflows for organization ruleset enforcement.
 
 ## Add the workflow to a repository
 
@@ -33,6 +33,17 @@ jobs:
 Replace `<FULL_COMMIT_SHA>` with the full SHA of an approved commit from this repository. Pinning the action prevents unreviewed changes from altering the code executed by the workflow.
 
 The action checks the repository name and default branch, required root files, license format, required README and contributing-guide sections, and the canonical security policy. It reports failures as GitHub annotations and in the job summary.
+
+## Organization-required workflows
+
+An organization ruleset can run one of these workflows against target repositories without adding workflow files to those repositories:
+
+- `.github/workflows/required-ogho-template-compliance.yml` uses the default `contributing-policy: optional`, allowing an absent local guide while validating one when present.
+- `.github/workflows/required-ogho-template-compliance-contributing-disabled.yml` sets `contributing-policy: disabled` and skips all local contributing-guide checks.
+
+Target each repository with only one of these required workflows. If both apply, both checks run and the default workflow still validates a local `CONTRIBUTING.md` when present.
+
+Both workflows skip their validation job when triggered in this source repository. Organization-ruleset runs use the target repository context and run normally.
 
 ## Action inputs
 
