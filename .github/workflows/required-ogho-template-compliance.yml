@@ -19,4 +19,4 @@ jobs:
       - name: Run OGHO template checks
         uses: oracle-samples/ogho-compliance/.github/actions/ogho-template-check@bb0d80806f204615b445e7ce2d3ee3019779eb2b
         with:
-          contributing-policy: optional
+          contributing-policy: required
