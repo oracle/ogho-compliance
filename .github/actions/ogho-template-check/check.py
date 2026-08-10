@@ -171,8 +171,8 @@ def markdown_headings(path: Path) -> list[tuple[int, str]]:
 def has_readme_section(label: str, alternatives: frozenset[str], headings: set[str]) -> bool:
     if not headings.isdisjoint(alternatives):
         return True
-    return label == "Documentation" and any(
-        heading.startswith("documentation") for heading in headings
+    return label in ("Documentation", "Examples") and any(
+        heading.startswith(label.casefold()) for heading in headings
     )
 
 
