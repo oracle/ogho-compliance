@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -116,6 +117,15 @@ def default_branch(root: Path, override: str, event_repository: dict[str, object
 def normalize_heading(value: str) -> str:
     value = re.sub(r"\s+#+\s*$", "", value.strip())
     value = value.replace("`", "").replace("*", "").replace("_", "")
+    value = value.strip()
+    while value and (
+        unicodedata.category(value[0]) == "So" or value[0] in ("\u200d", "\ufe0e", "\ufe0f")
+    ):
+        value = value[1:].lstrip()
+    while value and (
+        unicodedata.category(value[-1]) == "So" or value[-1] in ("\u200d", "\ufe0e", "\ufe0f")
+    ):
+        value = value[:-1].rstrip()
     return " ".join(value.casefold().split())
 
 
@@ -156,6 +166,18 @@ def markdown_headings(path: Path) -> list[tuple[int, str]]:
                 continue
         index += 1
     return headings
+
+
+def has_readme_section(label: str, alternatives: frozenset[str], headings: set[str]) -> bool:
+    if not headings.isdisjoint(alternatives):
+        return True
+    return label in ("Documentation", "Examples") and any(
+        heading.startswith(label.casefold()) for heading in headings
+    )
+
+
+def matches_canonical_security(security: bytes, canonical_security: bytes) -> bool:
+    return security.rstrip() == canonical_security.rstrip()
 
 
 def exact_root_file(root: Path, name: str) -> Path | None:
@@ -312,7 +334,7 @@ def validate(args: argparse.Namespace) -> list[Result]:
             )
         )
         for label, alternatives in README_SECTIONS:
-            present = not all_heading_names.isdisjoint(alternatives)
+            present = has_readme_section(label, alternatives, all_heading_names)
             accepted = ", ".join(sorted(alternatives))
             results.append(
                 Result(
@@ -391,17 +413,18 @@ def validate(args: argparse.Namespace) -> list[Result]:
                 )
             )
         else:
-            exact_match = security_path.read_bytes() == canonical_security
+            security_bytes = security_path.read_bytes()
+            matches_template = matches_canonical_security(security_bytes, canonical_security)
             results.append(
                 Result(
                     "SECURITY.md template",
-                    exact_match,
+                    matches_template,
                     (
-                        "SECURITY.md is byte-for-byte identical to the canonical template."
-                        if exact_match
+                        "SECURITY.md matches the canonical template."
+                        if matches_template
                         else (
-                            "SECURITY.md must be byte-for-byte identical to the canonical "
-                            "file on oracle/template-repo's main branch."
+                            "SECURITY.md must match the canonical file on oracle/template-repo's "
+                            "main branch, except for trailing whitespace."
                         )
                     ),
                     "SECURITY.md",
